@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from telegram_util import log_on_fail
 from telegram.ext import Updater
 import cached_url
+from message import Message
 
 with open('credential') as f:
     bot = Updater(yaml.load(f, Loader=yaml.FullLoader)['bot_token'], 
@@ -56,14 +57,16 @@ def keyMatch(chat_id, author, result):
 def intersect(l1, l2):
     return set(l1).intersection(l2)
 
-@log_on_fail(debug_group)
-def loopImp():
-    if time.time() - last_run < 20 * 60 * 60:
-        return
-    last_run = time.time()
+def getSoup(name):
+    return BeautifulSoup(cached_url.get('https://telete.in/s/' + name), 'html.parser')
+
+def getMessages():
     for name in readPool():
-        soup = cached_url.get('https://telete.in/s/' + item)
-        for msg in soup.find_all('div', class_='tgme_widget_message_bubble'):
+        soup = getSoup(name)
+        for msg in soup.find_all('div', class_='tgme_widget_message'):
+            msg = Message(msg)
+            if not msg.text:
+                continue
             text = msg.find('div', class_='tgme_widget_message_text')
             if (not text) or (not text.text):
                 continue
@@ -72,19 +75,14 @@ def loopImp():
                 continue
             author = msg.find('div', class_='tgme_widget_message_author')
             result = getParsedText(text)
-            matches = [chat_id for chat_id in DB if keyMatch(chat_id, str(author), result)]
-            if intersect(matches, PAUSED):
-                continue
-            for chat_id in matches:
-                try:
-                    bot.send_message(chat_id=chat_id, text=result, parse_mode='HTML')
-                    time.sleep(1)
-                except Exception as e:
-                    print(chat_id)
-                    print(e)                        
-                    print(result)
-            hashes.add(hash_value)
-            saveHashes(hash_value)
+
+@log_on_fail(debug_group)
+def loopImp():
+    if time.time() - last_run < 20 * 60 * 60:
+        return
+    last_run = time.time()
+    messages = getMessages()
+    # match with subscription
 
 def loop():
     loopImp()
