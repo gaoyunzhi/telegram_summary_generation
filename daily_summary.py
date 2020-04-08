@@ -3,14 +3,9 @@
 
 import yaml
 import time
-from telegram.ext import Updater, MessageHandler, Filters
-import requests
 import threading
-import export_to_telegraph
 from bs4 import BeautifulSoup
-import hashlib
-import telegram_util
-from telegram_util import splitCommand, log_on_fail, autoDestroy, getDisplayUser
+from telegram_util import log_on_fail
 
 START_MESSAGE = ('''
 Subscribe messages from public channels. 
@@ -143,21 +138,6 @@ def start(update, context):
 tele.dispatcher.add_handler(MessageHandler(Filters.command, manage))
 tele.dispatcher.add_handler(MessageHandler(Filters.private & (~Filters.command), start))
 
-def getSoup(url):
-    headers = {'Host':'telete.in',
-        'Connection':'keep-alive',
-        'Cache-Control':'max-age=0',
-        'Upgrade-Insecure-Requests':'1',
-        'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36',
-        'Sec-Fetch-User':'?1',
-        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-        'Sec-Fetch-Site':'none',
-        'Sec-Fetch-Mode':'navigate',
-        'Accept-Encoding':'gzip, deflate, br',
-        'Accept-Language':'en-US,en;q=0.9,zh;q=0.8,zh-CN;q=0.7'}
-    r = requests.get(url, headers=headers)
-    return BeautifulSoup(r.text, 'html.parser')
-
 def getParsedText(text):
     result = ''
     for item in text:
@@ -222,9 +202,9 @@ def loopImp():
 
 def loop():
     loopImp()
-    threading.Timer(INTERVAL, loop).start()
+    threading.Timer(60 * 10, loop).start() 
 
-threading.Timer(1, loop).start()
-
-tele.start_polling()
-tele.idle()
+if not 'once' in sys.argv:
+    threading.Timer(1, loop).start()
+else:
+    loopImp()
