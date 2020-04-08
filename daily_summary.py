@@ -39,6 +39,7 @@ def getSoup(name):
     return BeautifulSoup(cached_url.get('https://telete.in/s/' + name), 'html.parser')
 
 def getRawList(messages, setting):
+    raw_list = []
     for msg in messages.items.values():
         if msg.match(keys):
             raw_list.append([msg.getWeight(), msg.getText(setting)])
@@ -47,6 +48,10 @@ def getRawList(messages, setting):
         if len(raw_list) > 10 or not raw_list:
             print('warning, %s matched %d item' % (name, len(raw_list)))
     return [y for x, y in raw_list[:10]]
+
+def getMsg(raw_list):
+    return '每日文章精选\n\n' + 
+        '\n\n'.join([x.strip().replace('\n\n', '\n') for x in raw_list])
 
 def getMessages():
     messages = {}
@@ -64,12 +69,11 @@ def getMessages():
         if not raw_list:
             continue
         if setting == 'cn':
-            bot.send_message('@' + name, disable_web_page_preview=True)        
-
-
-
-
-            
+            bot.send_message('@' + name, getMsg(raw_list), 
+                disable_web_page_preview=True) 
+            continue
+        bot.send_message('@' + name, getMsg(raw_list), 
+            disable_web_page_preview=True, parse_mode='html') 
 
 @log_on_fail(debug_group)
 def loopImp():
