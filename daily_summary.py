@@ -6,137 +6,22 @@ import time
 import threading
 from bs4 import BeautifulSoup
 from telegram_util import log_on_fail
+from telegram.ext import Updater
+import cached_url
 
-START_MESSAGE = ('''
-Subscribe messages from public channels. 
+with open('credential') as f:
+    bot = Updater(yaml.load(f, Loader=yaml.FullLoader)['bot_token'], 
+        use_context=True).bot
 
-add - /add channel_link add channel to subscription pool. Channel must have public name. Automatically subscribe this channel if messge is send in a group or channel.
-list - /list: list all channels.
-keys - /show_keys: show subscription keywords
-edit - /keys keywords: give a new set of keywords, in json format
-''')
+last_run = 0
 
-with open('CREDENTIALS') as f:
-    CREDENTIALS = yaml.load(f, Loader=yaml.FullLoader)
+def readPool():
+    with open('pool') as f:
+        return [x.strip() for x in f.read().split() if x.strip()]
 
-tele = Updater(CREDENTIALS['bot_token'], use_context=True)
-export_to_telegraph.token = CREDENTIALS.get('telegraph')
-debug_group = tele.bot.get_chat(-1001198682178)
-
-INTERVAL = 3600
-PAUSED = []
-
-with open('hashes') as f:
-    hashes = set(yaml.load(f, Loader=yaml.FullLoader))
-
-def saveHashes(hash_value):
-    with open('hashes', 'a') as f:
-        f.write(hash_value + ': null\n')
 
 with open('DB') as f:
     DB = yaml.load(f, Loader=yaml.FullLoader)
-
-def saveDB():
-    with open('DB', 'w') as f:
-        f.write(yaml.dump(DB, sort_keys=True, indent=2))
-
-def addKey(chat_id, key):
-    DB[chat_id] = DB.get(chat_id, [])
-    DB[chat_id].append(key)
-    saveDB()
-
-def listPool(msg):
-    items = ['{}: [{}](t.me/{})'.format(index, content, content) \
-        for index, content in enumerate(DB['pool'])]
-    msg.reply_text('\n\n'.join(items), quote=False, disable_web_page_preview=True, 
-        parse_mode='Markdown')
-
-def add(msg, content):
-    if not msg.from_user:
-        return
-    if msg.from_user.id not in CREDENTIALS.get('admins', []):
-        tele.bot.send_message(chat_id=debug_group, text='suggestion: ' + content)
-        msg.reply_text('Only admin can add, your suggestion is recorded.', quote=False)
-        tele.bot.send_message(
-            chat_id=debug_group, 
-            text ='suggestion from ' + getDisplayUser(msg.from_user),
-            parse_mode='Markdown',
-            disable_web_page_preview=True) 
-        return
-    pieces = [x.strip() for x in content.split('/') if x.strip()]
-    if len(pieces) == 0:
-        return msg.reply_text('FAIL. can not find channel: ' + content, quote=False)
-    name = pieces[-1]
-    if name.startswith('@'):
-        name = name[1:]
-    if not name:
-        return msg.reply_text('FAIL. can not find channel: ' + content, quote=False)
-    if name in DB['pool']:
-        return msg.reply_text('channel already in pool: ' + content, quote=False)
-    DB['pool'].append(name)
-    if msg.chat_id < 0:
-        addKey(msg.chat_id, name) 
-    msg.reply_text('success', quote=False)
-
-def remove(msg, content):
-    if not msg.from_user:
-        return
-    if msg.from_user.id not in CREDENTIALS.get('admins', []):
-        return msg.reply_text('FAIL. Only admin can remove subscription', quote=False)
-    try:
-        del DB['pool'][int(content)]
-        saveDB()
-    except Exception as e:
-        msg.reply_text(str(e), quote=False)
-
-def getKeysText(msg):
-    return '/keys: ' + str(DB.get(msg.chat_id))
-
-def show(msg):
-    autoDestroy(msg.reply_text(getKeysText(msg), quote=False))
-
-def key(msg, content):
-    try:
-        DB[msg.chat_id] = yaml.load(content, Loader=yaml.FullLoader)
-        saveDB()
-        autoDestroy(msg.reply_text('success ' + getKeysText(msg), quote=False))
-    except Exception as e:
-        msg.reply_text(str(e), quote=False)
-
-def unpause(chat_id):
-    global PAUSED
-    PAUSED.remove(chat_id)
-
-@log_on_fail(debug_group)
-def manage(update, context):
-    msg = update.effective_message
-    if not msg:
-        return
-    autoDestroy(msg)
-    command, content = splitCommand(msg.text)
-    if ('add' in command) and content:
-        return add(msg, content)
-    if 'list' in command:
-        return listPool(msg)
-    if 'remove' in command:
-        return remove(msg, content)
-    if 'show' in command:
-        return show(msg)
-    if 'key' in command:
-        return key(msg, content)
-    if 'pause' in command:
-        global PAUSED
-        PAUSED.append(msg.chat_id)
-        threading.Timer(4 * 60 * 60, lambda: unpause(msg.chat_id)).start()
-        autoDestroy(msg.reply_text('success', quote=False))
-        return
-
-def start(update, context):
-    if update.message:
-        update.message.reply_text(START_MESSAGE, quote=False)
-
-tele.dispatcher.add_handler(MessageHandler(Filters.command, manage))
-tele.dispatcher.add_handler(MessageHandler(Filters.private & (~Filters.command), start))
 
 def getParsedText(text):
     result = ''
@@ -173,9 +58,10 @@ def intersect(l1, l2):
 
 @log_on_fail(debug_group)
 def loopImp():
-    global hashes
-    global DB
-    for item in DB['pool']:
+    if time.time() - last_run < 20 * 60 * 60:
+        return
+    last_run = time.time()
+    for name in readPool():
         soup = getSoup('https://telete.in/s/' + item)
         for msg in soup.find_all('div', class_='tgme_widget_message_bubble'):
             text = msg.find('div', class_='tgme_widget_message_text')
@@ -191,7 +77,7 @@ def loopImp():
                 continue
             for chat_id in matches:
                 try:
-                    tele.bot.send_message(chat_id=chat_id, text=result, parse_mode='HTML')
+                    bot.send_message(chat_id=chat_id, text=result, parse_mode='HTML')
                     time.sleep(1)
                 except Exception as e:
                     print(chat_id)
