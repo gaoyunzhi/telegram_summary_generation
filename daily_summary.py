@@ -15,7 +15,7 @@ def getFile(name):
     with open(name) as f:
         return yaml.load(f, Loader=yaml.FullLoader)
 
-bot = getFile('credential')['bot_token'], use_context=True).bot
+bot = Updater(getFile('credential')['bot_token'], use_context=True).bot
 debug_group = bot.get_chat(-1001198682178)
 
 last_run = 0
@@ -38,9 +38,9 @@ def intersect(l1, l2):
 def getSoup(name):
     return BeautifulSoup(cached_url.get('https://telete.in/s/' + name), 'html.parser')
 
-def getRawList(messages, setting):
+def getRawList(messages, setting, keys):
     raw_list = []
-    for msg in messages.items.values():
+    for msg in messages.values():
         if msg.match(keys):
             raw_list.append([msg.getWeight(), msg.getText(setting)])
     raw_list.sort(reverse=True)
@@ -50,7 +50,7 @@ def getRawList(messages, setting):
     return [y for x, y in raw_list[:10]]
 
 def getMsg(raw_list):
-    return '每日文章精选\n\n' + 
+    return '每日文章精选' + '\n\n' + \
         '\n\n'.join([x.strip().replace('\n\n', '\n') for x in raw_list])
 
 def getMessages():
@@ -63,9 +63,8 @@ def getMessages():
                 messages[msg.getID()] = msg
     settings = getFile('setting')
     for name, keys in getFile('subscription').items():
-        print(name, keys)
         setting = settings[name]
-        raw_list = getRawList(messages, setting)
+        raw_list = getRawList(messages, setting, keys)
         if not raw_list:
             continue
         if setting == 'cn':

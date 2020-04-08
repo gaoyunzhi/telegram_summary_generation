@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import cached_url
 import sys
-from telegram_util import cleanUrl, matchKeys
+from telegram_util import cleanUrl, matchKey
 
 def getCnLink(item):
 	if 'telegra.ph' not in item['href']:
@@ -58,7 +58,7 @@ class Message():
 		return int(self.soup.find('span', class_=tgme_widget_message_views).text)
 
 	def getWeight(self):
-		return self.getView + len(self.raw_text.text) * 10
+		return self.getView() + len(self.raw_text.text) * 10
 		
 	def getOrgLink(self):
 		forward = self.soup.find('a', class_='tgme_widget_message_forwarded_from_name')
@@ -72,6 +72,6 @@ class Message():
 		return self.getOrgLink() or self.getMsgLink()
 
 	def match(self, keys):
-		return matchKeys(self.getHiddenText(), keys) or \
-			matchKeys(str(self.raw_text), keys)
+		return matchKey(self.getHiddenText(), keys) or \
+			matchKey(str(self.raw_text), keys)
 
