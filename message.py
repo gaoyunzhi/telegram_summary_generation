@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import cached_url
 import sys
 from telegram_util import cleanUrl, matchKey
+from datetime import datetime, timedelta
 
 def getCnLink(item):
 	if 'telegra.ph' not in item['href']:
@@ -55,7 +56,18 @@ class Message():
 		return '\n\n'.join([x or '' for x in raw])
 
 	def getView(self):
-		return int(self.soup.find('span', class_=tgme_widget_message_views).text)
+		text = self.soup.find('span', class_='tgme_widget_message_views').text.strip()
+		base = 1
+		if text.endswith('K'):
+			base = 1000
+			text = text[:-1]
+		return float(text) * base
+
+	def isRecent(self):
+		t = self.soup.find('time')
+		return datetime.now() - timedelta(days=1) <= \
+			datetime.strptime(t['datetime'][:10], '%Y-%m-%d')
+
 
 	def getWeight(self):
 		return self.getView() + len(self.raw_text.text) * 10

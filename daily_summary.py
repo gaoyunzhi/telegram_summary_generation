@@ -38,20 +38,36 @@ def intersect(l1, l2):
 def getSoup(name):
     return BeautifulSoup(cached_url.get('https://telete.in/s/' + name), 'html.parser')
 
-def getRawList(messages, setting, keys):
+def getRawList(messages, config, keys):
     raw_list = []
     for msg in messages.values():
         if msg.match(keys):
-            raw_list.append([msg.getWeight(), msg.getText(setting)])
+            raw_list.append([msg.getWeight(), msg.getText(config)])
     raw_list.sort(reverse=True)
     if 'test' in sys.argv:
         if len(raw_list) > 10 or not raw_list:
-            print('warning, %s matched %d item' % (name, len(raw_list)))
+            print('warning, %s matched %d item' % (str(keys), len(raw_list)))
     return [y for x, y in raw_list[:10]]
 
 def getMsg(raw_list):
     return '每日文章精选' + '\n\n' + \
         '\n\n'.join([x.strip().replace('\n\n', '\n') for x in raw_list])
+
+def sendMsg(name, config, keys):
+    raw_list = getRawList(messages, config, keys)
+    print(raw_list)
+    if not raw_list:
+        return
+    if 'test' in sys.argv:
+        target = -1001198682178
+    else:
+        target = '@' + name
+    if config == 'cn':
+        bot.send_message(target, getMsg(raw_list), 
+            disable_web_page_preview=True) 
+        return 
+    bot.send_message(target, getMsg(raw_list), 
+        disable_web_page_preview=True, parse_mode='html') 
 
 def getMessages():
     messages = {}
@@ -59,20 +75,13 @@ def getMessages():
         soup = getSoup(name)
         for msg in soup.find_all('div', class_='tgme_widget_message'):
             msg = Message(msg)
-            if msg.getTitle():
+            if msg.getTitle() and msg.isRecent():
                 messages[msg.getID()] = msg
-    settings = getFile('setting')
+    configs = getFile('config')
     for name, keys in getFile('subscription').items():
-        setting = settings[name]
-        raw_list = getRawList(messages, setting, keys)
-        if not raw_list:
-            continue
-        if setting == 'cn':
-            bot.send_message('@' + name, getMsg(raw_list), 
-                disable_web_page_preview=True) 
-            continue
-        bot.send_message('@' + name, getMsg(raw_list), 
-            disable_web_page_preview=True, parse_mode='html') 
+        sendMsg(name, configs[name], keys)
+        # test only 
+        return
 
 @log_on_fail(debug_group)
 def loopImp():
