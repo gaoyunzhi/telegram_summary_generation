@@ -62,7 +62,7 @@ def loopImp():
         return
     last_run = time.time()
     for name in readPool():
-        soup = getSoup('https://telete.in/s/' + item)
+        soup = cached_url.get('https://telete.in/s/' + item)
         for msg in soup.find_all('div', class_='tgme_widget_message_bubble'):
             text = msg.find('div', class_='tgme_widget_message_text')
             if (not text) or (not text.text):
