@@ -47,6 +47,7 @@ def getRawList(messages, config, keys):
     if 'test' in sys.argv:
         if len(raw_list) > 10 or not raw_list:
             print('warning, %s matched %d item' % (str(keys), len(raw_list)))
+    print(raw_list[:10])
     return [y for x, y in raw_list[:10]]
 
 def getMsg(raw_list):
@@ -55,7 +56,6 @@ def getMsg(raw_list):
 
 def sendMsg(messages, name, config, keys):
     raw_list = getRawList(messages, config, keys)
-    print(raw_list)
     if not raw_list:
         return
     if 'test' in sys.argv:
