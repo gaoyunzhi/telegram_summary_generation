@@ -5,11 +5,13 @@ import yaml
 import time
 import threading
 from bs4 import BeautifulSoup
-from telegram_util import log_on_fail
+from telegram_util import log_on_fail, matchKey
 from telegram.ext import Updater
 import cached_url
 from message import Message
 import sys
+
+item_limit = 20
 
 def getFile(name):
     with open(name) as f:
@@ -42,13 +44,16 @@ def getRawList(messages, config, keys):
     raw_list = []
     for msg in messages.values():
         if msg.match(keys):
-            raw_list.append([msg.getWeight(), msg.getText(config)])
+            raw_list.append([msg.getWeight(), msg])
     raw_list.sort(reverse=True)
     if 'test' in sys.argv:
-        if len(raw_list) > 10 or not raw_list:
+        if len(raw_list) > item_limit or not raw_list:
             print('warning, %s matched %d item' % (str(keys), len(raw_list)))
-    print(raw_list[:10])
-    return [y for x, y in raw_list[:10]]
+    raw_list = [y.getText(config) for x, y in raw_list[:item_limit]]
+    if config == 'cn':
+        raw_list = [x for x in raw_list 
+            if not matchKey(x, ['youtu', 'twitter', 't.co'])]
+    return raw_list
 
 def getMsg(raw_list):
     return '每日文章精选' + '\n\n' + \
