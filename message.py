@@ -21,7 +21,7 @@ def getTextCN(soup):
 	links = set()
 	for x in new_soup.find_all('a'):
 		link = cleanUrl(clearUrl(getCnLink(x))) # 呵呵...
-		if link in links:
+		if link in links or (links and x.text == 'source'):
 			x.replace_with('')
 		else:
 			links.add(link)
