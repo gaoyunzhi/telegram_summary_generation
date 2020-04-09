@@ -53,7 +53,7 @@ def getMsg(raw_list):
     return '每日文章精选' + '\n\n' + \
         '\n\n'.join([x.strip().replace('\n\n', '\n') for x in raw_list])
 
-def sendMsg(name, config, keys):
+def sendMsg(messages, name, config, keys):
     raw_list = getRawList(messages, config, keys)
     print(raw_list)
     if not raw_list:
@@ -77,11 +77,7 @@ def getMessages():
             msg = Message(msg)
             if msg.getTitle() and msg.isRecent():
                 messages[msg.getID()] = msg
-    configs = getFile('config')
-    for name, keys in getFile('subscription').items():
-        sendMsg(name, configs[name], keys)
-        # test only 
-        return
+    return messages
 
 @log_on_fail(debug_group)
 def loopImp():
@@ -90,7 +86,11 @@ def loopImp():
         return
     last_run = time.time()
     messages = getMessages()
-    # match with subscription
+    configs = getFile('config')
+    for name, keys in getFile('subscription').items():
+        sendMsg(messages, name, configs[name], keys)
+        # test only 
+        return
 
 def loop():
     loopImp()

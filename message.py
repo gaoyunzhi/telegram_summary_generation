@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import cached_url
 import sys
-from telegram_util import cleanUrl, matchKey
+from telegram_util import cleanUrl, matchKey, clearUrl
 from datetime import datetime, timedelta
 
 def getCnLink(item):
@@ -18,9 +18,15 @@ def getCnLink(item):
 
 def getTextCN(soup):
 	new_soup = BeautifulSoup(str(soup), features='lxml')
+	links = set()
 	for x in new_soup.find_all('a'):
-		x.replace_with(' %s ' % getCnLink(x))
-	return cleanUrl(x.text)
+		link = cleanUrl(clearUrl(getCnLink(x))) # 呵呵...
+		if link in links:
+			x.replace_with('')
+		else:
+			links.add(link)
+			x.replace_with(' %s ' % link)
+	return cleanUrl(new_soup.get_text(separator=' '))
 
 # TODO: may need timestamp info
 class Message():
