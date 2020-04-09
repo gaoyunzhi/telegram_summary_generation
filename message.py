@@ -27,7 +27,7 @@ def getTextCN(soup):
 			links.add(link)
 			x.replace_with(' %s ' % link)
 	result = cleanUrl(new_soup.get_text(separator=' '))
-	return result.replace('|', '')
+	return result.strip().strip('|')
 
 # TODO: may need timestamp info
 class Message():
@@ -45,8 +45,8 @@ class Message():
 		prefix = '【%s】\n' % self.getTitle() 
 		if locale == 'cn':
 			return prefix + self.getCnText().replace('\n\n', '\n')
-		# May need to deal with '<br>'
-		return prefix + str(self.raw_text)
+		text = prefix + ''.join([str(x) for x in self.raw_text.children])
+		return text.replace('<br/>', '\n')
 
 	def getMsgPreview(self):
 		preview = self.soup.find('a', class_='tgme_widget_message_link_preview')
@@ -73,12 +73,16 @@ class Message():
 
 	def isRecent(self):
 		t = self.soup.find('time')
-		return datetime.now() - timedelta(days=1) <= \
-			datetime.strptime(t['datetime'][:10], '%Y-%m-%d')
+		return datetime.now() - timedelta(days=1.5) <= \
+			datetime.strptime(t['datetime'][:19], '%Y-%m-%dT%H:%M:%S')
 
 	def getWeight(self):
-		return self.getView() + len(self.raw_text.text) * \
-			(not not matchKey(self.getAllText(), ['1.', '编者按', 'daily_feminist']))
+		w = self.getView()
+		if matchKey(self.getAllText(), ['1.', '编者按']):
+			w += 500
+		if matchKey(self.getAllText(), ['daily_feminist']):
+			w += 200
+		return w
 		
 	def getOrgLink(self):
 		forward = self.soup.find('a', class_='tgme_widget_message_forwarded_from_name')
@@ -95,8 +99,10 @@ class Message():
 		return matchKey(self.getAllText(), keys)
 
 	def getDebug(self):
+		t = self.soup.find('time')
 		return self.getView(), len(self.raw_text.text), \
 			self.getMsgLink().split('/')[3], \
 			self.getOrgLink() and self.getOrgLink().split('/')[3], \
-			(not not matchKey(self.getAllText(), ['1.', '编者按', 'daily_feminist']))
+			(not not matchKey(self.getAllText(), ['1.', '编者按', 'daily_feminist'])), \
+			t['datetime'][:10]
 
