@@ -10,6 +10,7 @@ from telegram.ext import Updater
 import cached_url
 from message import Message
 import sys
+import random
 
 item_limit = 20
 
@@ -33,7 +34,7 @@ def getRawList(messages, config, keys):
     raw_list = []
     for msg in messages.values():
         if msg.match(keys):
-            raw_list.append([msg.getWeight(), msg])
+            raw_list.append([msg.getWeight() + random.random(), msg])
     raw_list.sort(reverse=True)
     if 'test' in sys.argv:
         if len(raw_list) > item_limit or not raw_list:
