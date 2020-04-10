@@ -40,7 +40,7 @@ def getRawList(messages, config, keys):
         if len(raw_list) > item_limit or not raw_list:
             print('warning, %s matched %d item' % (str(keys), len(raw_list)))
     raw_list = [y.getText(config) for x, y in raw_list[:item_limit]]
-    if config == 'cn':
+    if config in ['cn', 'jianshu']:
         raw_list = [x for x in raw_list 
             if not matchKey(x, ['youtu', 'twitter', 't.co'])]
     return raw_list
@@ -48,6 +48,19 @@ def getRawList(messages, config, keys):
 def getMsg(raw_list):
     return '每日文章精选' + '\n\n' + \
         '\n\n'.join([x.strip().replace('\n\n', '\n') for x in raw_list])
+
+def sendJianshu(messages, keys):
+    raw_list = getRawList(messages, 'jianshu', keys)
+    getMsg(raw_list)
+    headers = {}
+    headers['method'] = headers.get('method', 'POST')
+    headers['accept'] = headers.get('accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/apng,*/*;q=0.8,application/signed-exchange;v=b3')
+    headers['user-agent'] = headers.get('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36')
+    headers['cookie'] = getFile('credential')['jianshu_cookie']
+    data = {'notebook_id': "1870443", title: "每日文章精选"}
+    r = requests.get('https://www.jianshu.com/author/notes', headers=headers, 
+        data = data)
+    print(r)
 
 def sendMsg(messages, name, config, keys):
     raw_list = getRawList(messages, config, keys)
@@ -62,7 +75,10 @@ def sendMsg(messages, name, config, keys):
             disable_web_page_preview=True) 
         return
     bot.send_message(target, getMsg(raw_list), 
-        disable_web_page_preview=True, parse_mode='html') 
+        disable_web_page_preview=True, parse_mode='html')
+    if name == 'daily_read' or 'debug' in sys.argv:
+        sendJianshu(messages, keys)
+
 
 def getMessages():
     messages = {}

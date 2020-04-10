@@ -16,7 +16,7 @@ def getCnLink(item):
 			print(e)
 		return item['href']
 
-def getTextCN(soup):
+def getTextCN(soup, config):
 	new_soup = BeautifulSoup(str(soup), features='lxml')
 	links = set()
 	for x in new_soup.find_all('a'):
@@ -25,9 +25,18 @@ def getTextCN(soup):
 			x.replace_with('')
 		else:
 			links.add(link)
-			x.replace_with(' %s ' % link)
-	result = cleanUrl(new_soup.get_text(separator=' '))
-	return result.strip().strip('|')
+			x['href'] = link
+			c = 0
+			for y in x:
+				c += 1
+				if c == 1:
+					y.replace_with(link)
+				else:
+					y.replace_with('')
+	if config == 'cn':
+		result = cleanUrl(new_soup.get_text(separator=' '))
+		return result.strip().strip('|')
+	return str(result)
 
 # TODO: may need timestamp info
 class Message():
@@ -37,17 +46,16 @@ class Message():
 			or BeautifulSoup('', features='lxml')
 		self.text_cn = '' # 墙内版本
 		
-	def getCnText(self):
-		self.text_cn = self.text_cn or getTextCN(self.raw_text)
-		return self.text_cn
+	def getCnText(self, config):
+		return getTextCN(self.raw_text, config)
 
-	def getText(self, locale):
+	def getText(self, config):
 		prefix = '【%s】\n' % self.getTitle() 
-		if locale == 'cn':
-			return prefix + self.getCnText().replace('\n\n', '\n')
-		text = prefix + ''.join([str(x) for x in self.raw_text.children])
-		return text.replace('<br/>', '\n')
-
+		if config == 'us':
+			text = prefix + ''.join([str(x) for x in self.raw_text.children])
+			return text.replace('<br/>', '\n')
+		return prefix + self.getCnText(config).replace('\n\n', '\n')
+		
 	def getMsgPreview(self):
 		preview = self.soup.find('a', class_='tgme_widget_message_link_preview')
 		if preview:
@@ -105,4 +113,3 @@ class Message():
 			self.getOrgLink() and self.getOrgLink().split('/')[3], \
 			(not not matchKey(self.getAllText(), ['1.', '编者按', 'daily_feminist'])), \
 			t['datetime'][:10]
-
