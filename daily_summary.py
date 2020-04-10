@@ -96,9 +96,8 @@ def sendMsg(messages, name, config, keys):
         return
     bot.send_message(target, getMsg(raw_list), 
         disable_web_page_preview=True, parse_mode='html')
-    if name == 'daily_read' or 'debug' in sys.argv:
-        sendJianshu(messages, keys)
-
+    # if name == 'daily_read' or 'debug' in sys.argv:
+    #     sendJianshu(messages, keys)
 
 def getMessages():
     messages = {}
