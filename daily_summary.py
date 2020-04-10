@@ -12,6 +12,7 @@ from message import Message
 import sys
 import random
 import requests
+import tweepy
 
 item_limit = 20
 
@@ -19,7 +20,13 @@ def getFile(name):
     with open(name) as f:
         return yaml.load(f, Loader=yaml.FullLoader)
 
-bot = Updater(getFile('credential')['bot_token'], use_context=True).bot
+credential = getFile('credential')
+
+auth = tweepy.OAuthHandler(credential['twitter_consumer_key'], credential['twitter_consumer_secret'])
+auth.set_access_token(credential['twitter_access_token'], credential['twitter_access_secret'])
+api = tweepy.API(auth)
+
+bot = Updater(credential['bot_token'], use_context=True).bot
 debug_group = bot.get_chat(-1001198682178)
 
 last_run = 0
@@ -91,12 +98,14 @@ def sendMsg(messages, name, config, keys):
     else:
         target = '@' + name
     if config == 'cn':
-        bot.send_message(target, getMsg(raw_list), 
+        r = bot.send_message(target, getMsg(raw_list), 
             disable_web_page_preview=True) 
-        return
-    bot.send_message(target, getMsg(raw_list), 
-        disable_web_page_preview=True, parse_mode='html')
-    # if name == 'daily_read' or 'debug' in sys.argv:
+    else:
+        r = bot.send_message(target, getMsg(raw_list), 
+            disable_web_page_preview=True, parse_mode='html')
+    if name == 'daily_read' or 'debug' in sys.argv:
+        link = 'https://t.me/%s/%d' % (name, r.message_id)
+        api.update_status(link)
     #     sendJianshu(messages, keys)
 
 def getMessages():
