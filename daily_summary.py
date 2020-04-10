@@ -54,11 +54,10 @@ def sendJianshu(messages, keys):
     raw_list = getRawList(messages, 'jianshu', keys)
     getMsg(raw_list)
     headers = {}
-    headers['method'] = headers.get('method', 'POST')
-    headers['accept'] = headers.get('accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/apng,*/*;q=0.8,application/signed-exchange;v=b3')
+    headers['method'] = 'POST'
+    headers['accept'] = 'application/json'
     headers['user-agent'] = headers.get('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36')
     headers['cookie'] = getFile('credential')['jianshu_cookie']
-    print(headers)
     data = {'notebook_id': "1870443", 'title': "每日文章精选", 'at_bottom': False}
     r = requests.post('https://www.jianshu.com/author/notes', headers=headers, 
         data = data)
