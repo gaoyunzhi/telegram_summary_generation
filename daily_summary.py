@@ -11,6 +11,7 @@ import cached_url
 from message import Message
 import sys
 import random
+import requests
 
 item_limit = 20
 
@@ -57,10 +58,12 @@ def sendJianshu(messages, keys):
     headers['accept'] = headers.get('accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/apng,*/*;q=0.8,application/signed-exchange;v=b3')
     headers['user-agent'] = headers.get('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36')
     headers['cookie'] = getFile('credential')['jianshu_cookie']
-    data = {'notebook_id': "1870443", title: "每日文章精选"}
-    r = requests.get('https://www.jianshu.com/author/notes', headers=headers, 
+    print(headers)
+    data = {'notebook_id': "1870443", 'title': "每日文章精选", 'at_bottom': False}
+    r = requests.post('https://www.jianshu.com/author/notes', headers=headers, 
         data = data)
-    print(r)
+    print(r.content)
+    print(r.content['id'])
 
 def sendMsg(messages, name, config, keys):
     raw_list = getRawList(messages, config, keys)
@@ -105,7 +108,7 @@ def loop():
     loopImp()
     threading.Timer(60 * 10, loop).start() 
 
-if not 'once' in sys.argv:
+if 'once' not in sys.argv and 'debug' not in sys.argv:
     threading.Timer(1, loop).start()
 else:
     loopImp()

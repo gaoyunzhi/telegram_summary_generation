@@ -36,7 +36,7 @@ def getTextCN(soup, config):
 	if config == 'cn':
 		result = cleanUrl(new_soup.get_text(separator=' '))
 		return result.strip().strip('|')
-	return str(result)
+	return str(new_soup)
 
 # TODO: may need timestamp info
 class Message():
