@@ -51,28 +51,35 @@ def getMsg(raw_list):
         '\n\n'.join([x.strip().replace('\n\n', '\n') for x in raw_list])
 
 def sendJianshu(messages, keys):
+    # I think I need cookiejar
     raw_list = getRawList(messages, 'jianshu', keys)
+    s = requests.Session()
+    cookie_obj = requests.cookies.create_cookie(domain='www.jianshu.com',
+        name='COOKIE_NAME',value=getFile('jianshu_cookie'))
+    s.cookies.set_cookie(cookie_obj)
     headers = {}
     headers['method'] = 'POST'
     headers['accept'] = 'application/json'
+    headers['content_type'] = 'application/json; charset=utf-8'
     headers['user-agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36'
-    headers['cookie'] = getFile('credential')['jianshu_cookie']
     data = {'notebook_id': "1870443", 'title': "每日文章精选", 'at_bottom': False}
-    r = requests.post('https://www.jianshu.com/author/notes', headers=headers, 
+    r = s.post('https://www.jianshu.com/author/notes', headers=headers, 
         data = data)
     note_id = r.json()['id']
     print(note_id)
+    r = s.get('https://www.jianshu.com/author/notes/%d/content' % note_id, headers = headers)
+    print(r, r.content)
     # getMsg(raw_list)
     headers['referer'] = 'https://www.jianshu.com/writer'
-    headers['method'] = 'PUT'
+    headers['method'] = 'PUT'   
     headers['origin'] = 'https://www.jianshu.com'
+    headers['authority'] = 'www.jianshu.com'
     headers['path'] = '/author/notes/%d' % note_id
-    headers['content_type'] = 'application/json'
-    data = {'id': str(note_id), 'content': '', 'autosave_control': 1, 'title': '每日文章精选'}
-    r = requests.put('https://www.jianshu.com/author/notes/%d' % note_id, headers=headers, 
+    data = {'id': note_id,  'autosave_control': 1, 'content': '<p>123</p>','title': '1234'}
+    r = s.put('https://www.jianshu.com/author/notes/%d' % note_id, headers=headers, 
         data = data)
     print(r, r.reason)
-    r = requests.put('https://www.jianshu.com/author/notes/%d/publicize' % note_id, headers=headers)
+    r = s.put('https://www.jianshu.com/author/notes/%d/publicize' % note_id, headers=headers)
     print(r, r.reason)
 
 def sendMsg(messages, name, config, keys):
