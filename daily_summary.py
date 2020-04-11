@@ -50,7 +50,8 @@ def getRawList(messages, config, keys):
     raw_list = [y.getText(config) for x, y in raw_list[:item_limit]]
     if config in ['cn', 'jianshu']:
         raw_list = [x for x in raw_list if not matchKey(x, [
-            'youtu', 'twitter', 't.co', 'bbc.in']) and len(x) < 500]
+                'youtu', 'twitter', 't.co', 'bbc.in', 'instagram',
+            ]) and len(x) < 500]
     return raw_list
 
 def getMsg(raw_list):
