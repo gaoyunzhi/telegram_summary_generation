@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import cached_url
 import sys
-from telegram_util import cleanUrl, matchKey, clearUrl
+from telegram_util import compactText, matchKey, clearUrl
 from datetime import datetime, timedelta
 
 def getCnLink(item):
@@ -20,7 +20,7 @@ def getTextCN(soup, config):
 	new_soup = BeautifulSoup(str(soup), features='lxml')
 	links = set()
 	for x in new_soup.find_all('a'):
-		link = cleanUrl(clearUrl(getCnLink(x))) # 呵呵...
+		link = compactText(clearUrl(getCnLink(x))) # 呵呵...
 		if link in links or (links and x.text == 'source'):
 			x.replace_with('')
 		else:
@@ -34,7 +34,7 @@ def getTextCN(soup, config):
 				else:
 					y.replace_with('')
 	if config == 'cn':
-		result = cleanUrl(new_soup.get_text(separator=' '))
+		result = compactText(new_soup.get_text(separator=' '))
 		return result.strip().strip('|')
 	return str(new_soup)
 
