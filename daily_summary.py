@@ -14,7 +14,7 @@ import random
 import requests
 import tweepy
 
-item_limit = 20
+item_limit = 5
 
 def getFile(name):
     with open(name) as f:
@@ -42,11 +42,9 @@ def getRawList(messages, config, keys):
     raw_list = []
     for msg in messages.values():
         if msg.match(keys):
-            raw_list.append([msg.getWeight() + random.random(), msg])
+            raw_list.append((msg.getTime(), msg))
     raw_list.sort(reverse=True)
-    if 'test' in sys.argv:
-        if len(raw_list) > item_limit or not raw_list:
-            print('warning, %s matched %d item' % (str(keys), len(raw_list)))
+    raw_list = raw_list[:item_limit]
     raw_list = [y.getText(config) for x, y in raw_list[:item_limit]]
     if config in ['cn', 'jianshu']:
         raw_list = [x for x in raw_list if not matchKey(x, [
@@ -92,8 +90,6 @@ def sendJianshu(messages, keys):
 
 def sendMsg(messages, name, config, keys):
     raw_list = getRawList(messages, config, keys)
-    if not raw_list:
-        return
     if 'debug' in sys.argv:
         target = -1001198682178
     else:
@@ -115,7 +111,7 @@ def getMessages():
         soup = getSoup(name)
         for msg in soup.find_all('div', class_='tgme_widget_message'):
             msg = Message(msg)
-            if msg.getTitle() and msg.isRecent():
+            if msg.getTitle():
                 messages[msg.getID()] = msg
     return messages
 

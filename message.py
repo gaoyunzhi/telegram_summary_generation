@@ -79,10 +79,14 @@ class Message():
 			text = text[:-1]
 		return float(text) * base
 
-	def isRecent(self):
+	# def isRecent(self):
+	# 	t = self.soup.find('time')
+	# 	return datetime.now() - timedelta(days=1.5) <= \
+	# 		datetime.strptime(t['datetime'][:19], '%Y-%m-%dT%H:%M:%S')
+
+	def getTime(self):
 		t = self.soup.find('time')
-		return datetime.now() - timedelta(days=1.5) <= \
-			datetime.strptime(t['datetime'][:19], '%Y-%m-%dT%H:%M:%S')
+		return t['datetime']
 
 	def getWeight(self):
 		w = self.getView()
