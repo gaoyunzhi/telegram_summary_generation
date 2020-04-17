@@ -44,13 +44,12 @@ def getRawList(messages, config, keys):
         if msg.match(keys):
             raw_list.append((msg.getTime(), msg))
     raw_list.sort(reverse=True)
-    raw_list = raw_list[:item_limit]
-    raw_list = [y.getText(config) for x, y in raw_list[:item_limit]]
+    raw_list = [y.getText(config) for x, y in raw_list[:item_limit * 5]]
     if config in ['cn', 'jianshu']:
-        raw_list = [x for x in raw_list if not matchKey(x, [
+        raw_list = [x for x in raw_list if not matchKey(str(x), [
                 'youtu', 'twitter', 't.co', 'bbc.in', 'instagram',
             ]) and len(x) < 500]
-    return raw_list
+    return raw_list[:item_limit]
 
 def getMsg(raw_list):
     return '每日文章精选' + '\n\n' + \
