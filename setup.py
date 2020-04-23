@@ -14,7 +14,9 @@ def setup():
 		os.system(command + ' test')
 	else:
 		os.system('touch nohup.out')
-		os.system('nohup %s & tail -F nohup.out' % command)
+		os.system('nohup %s & ' % command)
+		if 'notail' not in sys.argv:
+			os.system('tail -F nohup.out')
 
 if __name__ == '__main__':
 	setup()
