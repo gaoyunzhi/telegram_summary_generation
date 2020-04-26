@@ -14,7 +14,7 @@ import random
 import requests
 import tweepy
 
-item_limit = 5
+item_limit = 10
 
 def getFile(name):
     with open(name) as f:
@@ -41,6 +41,7 @@ def getSoup(name):
 def getRawList(messages, config, keys):
     raw_list = []
     for msg in messages.values():
+        print(msg.getText('cn')[:10])
         if msg.match(keys):
             raw_list.append((msg.getTime(), msg))
     raw_list.sort(reverse=True)
