@@ -41,7 +41,6 @@ def getSoup(name):
 def getRawList(messages, config, keys):
     raw_list = []
     for msg in messages.values():
-        print(msg.getText('cn')[:10])
         if msg.match(keys):
             raw_list.append((msg.getTime(), msg))
     raw_list.sort(reverse=True)
@@ -49,7 +48,7 @@ def getRawList(messages, config, keys):
     if config in ['cn', 'jianshu']:
         raw_list = [x for x in raw_list if not matchKey(str(x), [
                 'youtu', 'twitter', 't.co', 'bbc.in', 'instagram',
-            ]) and len(x) < 500]
+            ]) and len(x.split('http')[0]) < 500]
     return raw_list[:item_limit]
 
 def getMsg(raw_list):
