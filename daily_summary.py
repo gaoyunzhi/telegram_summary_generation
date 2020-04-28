@@ -43,6 +43,7 @@ def getRawList(messages, config, keys):
     for msg in messages.values():
         if msg.match(keys):
             raw_list.append((msg.getTime(), msg))
+    print('raw_list_length', len(raw_list))
     raw_list.sort(reverse=True)
     raw_list = [y.getText(config) for x, y in raw_list[:item_limit * 5]]
     if config in ['cn', 'jianshu']:
