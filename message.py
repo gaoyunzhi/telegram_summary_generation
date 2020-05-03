@@ -69,7 +69,6 @@ class Message():
 			text = next(self.raw_text.children)
 		except:
 			return
-		print(str(text))
 		if not isinstance(text, str):
 			text = text.text
 		return cutCaption(text, '', 10)
