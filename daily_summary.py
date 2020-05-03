@@ -41,9 +41,10 @@ def getSoup(name):
 def getRawList(messages, config, keys):
     raw_list = []
     for msg in messages.values():
+        if '活动是对男性的逆向歧视吗' in msg.getAllText():
+            print('here3')
         if msg.match(keys):
             raw_list.append((msg.getTime(), msg))
-    print('raw_list_length', len(raw_list))
     raw_list.sort(reverse=True)
     raw_list = [y.getText(config) for x, y in raw_list[:item_limit * 5]]
     if config in ['cn', 'jianshu']:
@@ -109,6 +110,8 @@ def getMessages():
     messages = {}
     for name in readPool():
         soup = getSoup(name)
+        if 'daily_fem' in name:
+            print('here0')
         for msg in soup.find_all('div', class_='tgme_widget_message'):
             msg = Message(msg)
             if msg.getTitle():
