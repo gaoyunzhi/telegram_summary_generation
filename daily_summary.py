@@ -44,7 +44,7 @@ def getRawList(messages, config, keys):
         if '活动是对男性的逆向歧视吗' in msg.getAllText():
             print('here3')
         if msg.match(keys):
-            raw_list.append((msg.getTime(), msg))
+            raw_list.append((msg.getTime() + random.random(), msg))
     raw_list.sort(reverse=True)
     raw_list = [y.getText(config) for x, y in raw_list[:item_limit * 5]]
     if config in ['cn', 'jianshu']:

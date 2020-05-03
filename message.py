@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import cached_url
 import sys
-from telegram_util import compactText, matchKey, clearUrl
+from telegram_util import compactText, matchKey, clearUrl, cutCaption
 from datetime import datetime, timedelta
 
 def getCnLink(item):
@@ -67,6 +67,14 @@ class Message():
 		title = self.soup.find('div', class_='link_preview_title')
 		if title:
 			return title.text
+		try:
+			text = next(self.raw_text.children)
+		except:
+			return
+		print(str(text))
+		if not isinstance(text, str):
+			text = text.text
+		return cutCaption(text, '', 10)
 
 	def getAllText(self):
 		raw = [self.getOrgLink(), self.getMsgLink(), 
@@ -87,8 +95,10 @@ class Message():
 	# 		datetime.strptime(t['datetime'][:19], '%Y-%m-%dT%H:%M:%S')
 
 	def getTime(self):
-		t = self.soup.find('time')
-		return t['datetime']
+		for t in self.soup.find_all('time'):
+			if 'datetime' in t:
+				return t['datetime']
+		return 0
 
 	def getWeight(self):
 		w = self.getView()
