@@ -44,6 +44,8 @@ class Message():
 		self.soup = soup
 		self.raw_text = soup.find('div', class_='tgme_widget_message_text') \
 			or BeautifulSoup('', features='lxml')
+		if '活动是对男性的逆向歧视吗' in self.raw_text:
+			print('here1')
 		self.text_cn = '' # 墙内版本
 		
 	def getCnText(self, config):
